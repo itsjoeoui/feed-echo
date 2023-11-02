@@ -51,3 +51,32 @@ func (h *Handler) CreatePost(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, insertedPost)
 }
+
+func (h *Handler) GetPosts(c echo.Context) error {
+	// TODO: remove the hardcoded user later
+	usersColl := h.DB.Collection("users")
+
+	u := &model.User{}
+	filter := bson.D{{Key: "username", Value: "jyuhq"}}
+	err := usersColl.FindOne(context.TODO(), filter).Decode(&u)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	postsColl := h.DB.Collection("posts")
+
+	// Actually insert the new user to DB
+	cursor, err := postsColl.Find(context.TODO(), bson.D{{Key: "author", Value: u.ID}})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	defer cursor.Close(context.TODO())
+
+	var posts []model.Post
+
+	if err := cursor.All(context.TODO(), &posts); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, posts)
+}

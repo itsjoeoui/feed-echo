@@ -55,6 +55,7 @@ func main() {
 	})
 
 	e.POST("/post", h.CreatePost)
+	e.GET("/post", h.GetPosts)
 	e.POST("/user", h.CreateUser)
 
 	e.Logger.Fatal(e.Start(":1323"))
