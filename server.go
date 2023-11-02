@@ -54,7 +54,6 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
-	e.GET("/post/:id", h.GetPost)
 	e.POST("/post", h.CreatePost)
 	e.POST("/user", h.CreateUser)
 

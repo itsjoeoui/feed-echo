@@ -11,17 +11,18 @@ import (
 )
 
 func (h *Handler) CreateUser(c echo.Context) error {
-	usersColl := h.DB.Collection("users")
-
+	// Create a new User and load the request body into it
 	u := &model.User{}
-
 	if err := c.Bind(u); err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
+
+	// Make sure we get all the fields we need
 	if u.Username == "" || u.DisplayName == "" || u.Password == "" {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Invalid username, displayname or password"}
 	}
 
+	usersColl := h.DB.Collection("users")
 	filter := bson.D{{Key: "username", Value: u.Username}}
 	count, err := usersColl.CountDocuments(context.TODO(), filter)
 	if err != nil {
@@ -29,28 +30,28 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	}
 
 	if count > 0 {
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Username already exists"}
+		return &echo.HTTPError{Code: http.StatusConflict, Message: "Username already exists"}
 	}
 
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-
 	u.Password = string(hashedPassword)
 
+	// Actually insert the new user to DB
 	result, err := usersColl.InsertOne(context.TODO(), u)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
+	// Return the inserted user
 	var insertedUser bson.M
 	err = usersColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: result.InsertedID}}).Decode(&insertedUser)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-
-	c.Logger().Debug(insertedUser)
 
 	return c.JSON(http.StatusOK, insertedUser)
 }

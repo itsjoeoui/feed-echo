@@ -4,41 +4,50 @@ import (
 	"context"
 	"feed/model"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (h *Handler) CreatePost(c echo.Context) error {
+	// TODO: remove the hardcoded user later
 	usersColl := h.DB.Collection("users")
 
-	var user model.User
+	u := &model.User{}
 	filter := bson.D{{Key: "username", Value: "jyuhq"}}
-	err := usersColl.FindOne(context.TODO(), filter).Decode(&user)
+	err := usersColl.FindOne(context.TODO(), filter).Decode(&u)
 	if err != nil {
-		c.Logger().Fatal(err)
-
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	p := &model.Post{
-		Content: "Hello World!",
-		Author:  user.ID,
-		Likes:   0,
+	// Create a new Post and load the request body into it
+	p := &model.Post{}
+	if err := c.Bind(p); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
 	}
+
+	// Make sure we get all the fields we need
+	if p.Content == "" {
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Post content cannot be empty!"}
+	}
+	p.Author = u.ID
+	p.Date = time.Now()
 
 	postsColl := h.DB.Collection("posts")
 
+	// Actually insert the new user to DB
 	result, err := postsColl.InsertOne(context.TODO(), p)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	c.Logger().Debug(result)
+	// Return the inserted user
+	var insertedPost bson.M
+	err = postsColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: result.InsertedID}}).Decode(&insertedPost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
 
-	return c.JSON(http.StatusOK, p)
-}
-
-func (h *Handler) GetPost(c echo.Context) error {
-	return nil
+	return c.JSON(http.StatusOK, insertedPost)
 }
