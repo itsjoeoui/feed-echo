@@ -6,6 +6,7 @@ type (
 	User struct {
 		Username    string
 		DisplayName string
+		Password    string
 		ID          primitive.ObjectID `bson:"_id,omitempty"`
 	}
 )
