@@ -26,8 +26,8 @@ var googleOauthConfig = &oauth2.Config{
 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 	Endpoint:     google.Endpoint,
-	Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 	RedirectURL:  "http://localhost:1323/auth/google/callback",
+	Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 }
 
 func (h *Handler) GoogleLogin(c echo.Context) error {
@@ -62,6 +62,6 @@ func (h *Handler) GoogleCallback(c echo.Context) error {
 		return err
 	}
 
-	fmt.Println(userInfo.Email)
+	c.Logger().Debug(fmt.Sprintf("%+v", userInfo))
 	return c.Redirect(http.StatusTemporaryRedirect, "/")
 }
