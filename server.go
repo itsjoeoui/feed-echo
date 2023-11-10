@@ -58,7 +58,7 @@ func main() {
 
 	e.POST("/post", h.CreatePost)
 	e.GET("/post", h.GetPosts)
-	e.POST("/user", h.CreateUser)
+	e.PATCH("/user", h.UpdateUser)
 	e.GET("/auth/google/login", h.GoogleLogin)
 	e.GET("/auth/google/callback", h.GoogleCallback)
 

@@ -16,6 +16,7 @@ import (
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 type GoogleUserInfo struct {
+	// The 'sub' field represents the unique identifier for the user
 	Sub           string `json:"sub"`
 	Picture       string `json:"picture"`
 	Email         string `json:"email"`
@@ -63,5 +64,6 @@ func (h *Handler) GoogleCallback(c echo.Context) error {
 	}
 
 	c.Logger().Debug(fmt.Sprintf("%+v", userInfo))
+
 	return c.Redirect(http.StatusTemporaryRedirect, "/")
 }
